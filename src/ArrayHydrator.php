@@ -1,10 +1,11 @@
 <?php
 namespace pmill\Doctrine\Hydrator;
 
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Exception;
+use Doctrine\ORM\Proxy\Proxy;
 
 class ArrayHydrator
 {
@@ -106,7 +107,12 @@ class ArrayHydrator
      */
     protected function hydrateProperties($entity, $data)
     {
-        $reflectionObject = new \ReflectionObject($entity);
+        if ($entity instanceof Proxy && $entity->__isInitialized() === false) {
+            //For proxy entity we need to extract real class
+            $reflectionObject = new \ReflectionObject(ClassUtils::getRealClass($entity));
+        } else {
+            $reflectionObject = new \ReflectionObject($entity);
+        }
 
         $metaData = $this->entityManager->getClassMetadata(get_class($entity));
         
